@@ -22,6 +22,20 @@ public class Entry implements Serializable {
         this.mark = mark;
     }
 
+    public Entry(String key, String value, short mark) {
+        this.key = key.getBytes();
+        this.value = value.getBytes();
+        this.keySize = key.getBytes().length;
+        this.valueSize = value.getBytes().length;
+        this.mark = mark;
+    }
+
+    private Entry(int keySize, int valueSize, short mark) {
+        this.keySize = keySize;
+        this.valueSize = valueSize;
+        this.mark = mark;
+    }
+
     public byte[] encode() {
         ByteBuffer buffer = ByteBuffer.allocate(getSize()).order(ByteOrder.BIG_ENDIAN);
         buffer.putInt(keySize);
@@ -37,11 +51,7 @@ public class Entry implements Serializable {
         int keySize = byteBuffer.getInt();
         int valueSize = byteBuffer.getInt();
         short mark = byteBuffer.getShort();
-        byte[] key = new byte[keySize];
-        byteBuffer.get(key);
-        byte[] value = new byte[valueSize];
-        byteBuffer.get(value);
-        return new Entry(key, value, mark);
+        return new Entry(keySize, valueSize, mark);
     }
 
     public void setKey(byte[] key) {

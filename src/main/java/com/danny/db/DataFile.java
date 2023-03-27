@@ -58,6 +58,7 @@ public class DataFile {
      * @throws IOException
      */
     public Entry read(long offset) throws IOException {
+        if (file.length() < offset + Entry.ENTRY_HEADER_SIZE) return null;
         byte[] bytes = new byte[Entry.ENTRY_HEADER_SIZE];
         file.seek(offset);
         file.readFully(bytes);

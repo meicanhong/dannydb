@@ -50,31 +50,34 @@ public class Action {
         }
     }
 
-    public byte[] get(byte[] key) throws IOException {
+    public String get(String key) throws IOException {
         Long offset = indexes.get(key);
         if (offset == null) {
             return null;
         }
         Entry entry = dataFile.read(offset);
+        if (entry.getMark() == Entry.DEL) {
+            return null;
+        }
         if (entry.getValue() == null) {
             return null;
         }
-        return entry.getValue();
+        return new String(entry.getValue());
     }
 
-    public void put(byte[] key, byte[] value) throws IOException {
+    public void put(String key, String value) throws IOException {
         // 先获取 offset，未写入前的 offset 才是 entry 的开始位置
         long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.PUT);
         dataFile.write(entry);
-        indexes.put(new String(key), offset);
+        indexes.put(key, offset);
     }
 
-    public void delete(byte[] key, byte[] value) throws IOException {
+    public void delete(String key, String value) throws IOException {
         long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.DEL);
         dataFile.write(entry);
-        indexes.put(new String(key), offset);
+        indexes.put(key, offset);
     }
 
     public void merge() throws IOException {
