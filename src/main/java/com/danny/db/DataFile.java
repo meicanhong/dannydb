@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class DataFile {
-    public static final String FileName = "bitcask.data";
-    public static final String MergeFileName = "bitcask.data.merge";
+    public static final String FileName = "danny.data";
+    public static final String MergeFileName = "danny.data.merge";
 
     private RandomAccessFile file;
     private String absolutePath;
