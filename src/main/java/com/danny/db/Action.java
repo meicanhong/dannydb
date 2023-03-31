@@ -5,12 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Action {
-
-    private Map<String, Long> indexes;
+    private ConcurrentHashMap<byte[], Long> indexes;
     private DataFile dataFile;
     private String dirPath;
     private ReadWriteLock lock;
@@ -23,7 +23,7 @@ public class Action {
         }
 
         this.dataFile = DataFile.createDataFile(dirPath);
-        this.indexes = new HashMap<String, Long>();
+        this.indexes = new ConcurrentHashMap<>();
         this.dirPath = dirPath;
         this.lock = new ReentrantReadWriteLock();
 
@@ -41,7 +41,7 @@ public class Action {
                 Entry entry = dataFile.read(offset);
                 if (entry == null) break;
                 if (entry.getMark() != Entry.DEL) {
-                    indexes.put(new String(entry.getKey()), offset);
+                    indexes.put(entry.getKey(), offset);
                 }
                 offset += entry.getSize();
             } catch (IOException e) {
@@ -50,7 +50,7 @@ public class Action {
         }
     }
 
-    public String get(String key) throws IOException {
+    public byte[] get(byte[] key) throws IOException {
         Long offset = indexes.get(key);
         if (offset == null) {
             return null;
@@ -62,10 +62,10 @@ public class Action {
         if (entry.getValue() == null) {
             return null;
         }
-        return new String(entry.getValue());
+        return entry.getValue();
     }
 
-    public void put(String key, String value) throws IOException {
+    public void put(byte[] key, byte[] value) throws IOException {
         // 先获取 offset，未写入前的 offset 才是 entry 的开始位置
         long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.PUT);
@@ -73,7 +73,7 @@ public class Action {
         indexes.put(key, offset);
     }
 
-    public void delete(String key, String value) throws IOException {
+    public void delete(byte[] key, byte[] value) throws IOException {
         long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.DEL);
         dataFile.write(entry);
@@ -106,7 +106,7 @@ public class Action {
         for (Entry validEntry : validEntries) {
             long writeOff = mergeFile.getOffset();
             mergeFile.write(validEntry);
-            indexes.put(new String(validEntry.getKey()), writeOff);
+            indexes.put(validEntry.getKey(), writeOff);
         }
 
         dataFile.close();

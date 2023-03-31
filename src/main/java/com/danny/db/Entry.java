@@ -22,14 +22,6 @@ public class Entry implements Serializable {
         this.mark = mark;
     }
 
-    public Entry(String key, String value, short mark) {
-        this.key = key.getBytes();
-        this.value = value.getBytes();
-        this.keySize = key.getBytes().length;
-        this.valueSize = value.getBytes().length;
-        this.mark = mark;
-    }
-
     private Entry(int keySize, int valueSize, short mark) {
         this.keySize = keySize;
         this.valueSize = valueSize;
