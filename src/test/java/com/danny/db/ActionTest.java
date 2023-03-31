@@ -17,8 +17,9 @@ class ActionTest {
     private Action action;
     @BeforeAll
     void init() throws IOException {
-        Files.deleteIfExists(Paths.get("/Users/danny/IdeaProjects/dannydb/data/danny.data"));
-        this.action = new Action("/Users/danny/IdeaProjects/dannydb/data");
+        String path = System.getProperty("user.dir");
+        Files.deleteIfExists(Paths.get(path + "/data/danny.data"));
+        this.action = new Action(path + "/data");
     }
 
     @Test
