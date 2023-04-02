@@ -29,7 +29,9 @@ class BackendTest {
         byte[] key = "hello".getBytes();
         byte[] value = "danny".getBytes();
         backend.put(key, value);
-        Assertions.assertEquals("danny", new String(backend.get(key)));
+        String result = new String(backend.get(key));
+        System.out.println(result);
+        Assertions.assertEquals("danny", result);
     }
 
     @Test
@@ -54,14 +56,13 @@ class BackendTest {
         String key = "";
         String value = "";
         List<String[]> datas = new ArrayList<String[]>();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 5000000; i++) {
             key = RandomHashGenerator.getRandomHash();
             value = RandomHashGenerator.getRandomHash();
             String[] data = {key, value};
             datas.add(data);
         }
         long startTime = System.currentTimeMillis();
-        byte[] bytes = datas.get(0)[0].getBytes();
         for (int i = 0; i < datas.size(); i++) {
             backend.put(datas.get(i)[0].getBytes(), datas.get(i)[1].getBytes());
         }
@@ -70,7 +71,7 @@ class BackendTest {
         System.out.println("Insert 1 Million Records Time elapsed: " + timeElapsed + " ms");
 
         startTime = System.currentTimeMillis();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 1000000; i++) {
             byte[] result = backend.get(datas.get(i)[0].getBytes());
             Assertions.assertEquals(datas.get(i)[1], new String(result));
         }

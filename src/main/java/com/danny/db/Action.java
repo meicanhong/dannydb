@@ -1,5 +1,6 @@
 package com.danny.db;
 
+import com.danny.db.util.ByteArrayWrapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,7 +11,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Action {
-    private ConcurrentHashMap<byte[], Long> indexes;
+    private ConcurrentHashMap<ByteArrayWrapper, Long> indexes;
     private DataFile dataFile;
     private String dirPath;
     private ReadWriteLock lock;
@@ -41,7 +42,7 @@ public class Action {
                 Entry entry = dataFile.read(offset);
                 if (entry == null) break;
                 if (entry.getMark() != Entry.DEL) {
-                    indexes.put(entry.getKey(), offset);
+                    indexes.put(new ByteArrayWrapper(entry.getKey()), offset);
                 }
                 offset += entry.getSize();
             } catch (IOException e) {
@@ -51,7 +52,7 @@ public class Action {
     }
 
     public byte[] get(byte[] key) throws IOException {
-        Long offset = indexes.get(key);
+        Long offset = indexes.get(new ByteArrayWrapper(key));
         if (offset == null) {
             return null;
         }
@@ -70,14 +71,14 @@ public class Action {
         long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.PUT);
         dataFile.write(entry);
-        indexes.put(key, offset);
+        indexes.put(new ByteArrayWrapper(key), offset);
     }
 
     public void delete(byte[] key, byte[] value) throws IOException {
         long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.DEL);
         dataFile.write(entry);
-        indexes.put(key, offset);
+        indexes.put(new ByteArrayWrapper(key), offset);
     }
 
     public void merge() throws IOException {
@@ -93,7 +94,7 @@ public class Action {
         Entry entry;
         List<Entry> validEntries = new ArrayList<Entry>();
         while ((entry = dataFile.read(offset)) != null) {
-            Long memoryOffset = indexes.get(new String(entry.getKey()));
+            Long memoryOffset = indexes.get(new ByteArrayWrapper(entry.getKey()));
             if (memoryOffset != null && memoryOffset == offset) {
                 validEntries.add(entry);
             }
@@ -106,7 +107,7 @@ public class Action {
         for (Entry validEntry : validEntries) {
             long writeOff = mergeFile.getOffset();
             mergeFile.write(validEntry);
-            indexes.put(validEntry.getKey(), writeOff);
+            indexes.put(new ByteArrayWrapper(validEntry.getKey()), writeOff);
         }
 
         dataFile.close();

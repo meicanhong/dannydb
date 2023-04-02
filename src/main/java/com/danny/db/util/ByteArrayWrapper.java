@@ -1,6 +1,6 @@
 package com.danny.db.util;
 import java.util.Arrays;
-class ByteArrayWrapper {
+public class ByteArrayWrapper {
     private final byte[] array;
 
     public ByteArrayWrapper(byte[] array) {
