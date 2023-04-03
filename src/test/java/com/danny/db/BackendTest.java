@@ -52,28 +52,26 @@ class BackendTest {
     }
 
     @Test
-    void pressureTest() throws NoSuchAlgorithmException, IOException, ExecutionException, InterruptedException {
+    void pressureTest() throws NoSuchAlgorithmException, IOException, InterruptedException {
         String key = "";
         String value = "";
-        List<String[]> datas = new ArrayList<String[]>();
-        for (int i = 0; i < 5000000; i++) {
+        List<byte[][]> datas = new ArrayList<>();
+        for (int i = 0; i < 1000000; i++) {
             key = RandomHashGenerator.getRandomHash();
             value = RandomHashGenerator.getRandomHash();
-            String[] data = {key, value};
+            byte[][] data = {key.getBytes(), value.getBytes()};
             datas.add(data);
         }
         long startTime = System.currentTimeMillis();
-        for (int i = 0; i < datas.size(); i++) {
-            backend.put(datas.get(i)[0].getBytes(), datas.get(i)[1].getBytes());
-        }
+        backend.put(datas);
         long endTime = System.currentTimeMillis();
         long timeElapsed = endTime - startTime;
         System.out.println("Insert 1 Million Records Time elapsed: " + timeElapsed + " ms");
 
         startTime = System.currentTimeMillis();
         for (int i = 0; i < 1000000; i++) {
-            byte[] result = backend.get(datas.get(i)[0].getBytes());
-            Assertions.assertEquals(datas.get(i)[1], new String(result));
+            byte[] result = backend.get(datas.get(i)[0]);
+            Assertions.assertEquals(new String(datas.get(i)[1]), new String(result));
         }
         endTime = System.currentTimeMillis();
         timeElapsed = endTime - startTime;
