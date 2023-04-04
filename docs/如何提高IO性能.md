@@ -3,4 +3,5 @@
 
 
 ## 参考资料
-https://www.oracle.com/technical-resources/articles/javase/perftuning.html
+- [Guide to Java FileChannel](https://www.baeldung.com/java-filechannel)
+- https://www.oracle.com/technical-resources/articles/javase/perftuning.html

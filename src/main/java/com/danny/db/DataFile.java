@@ -3,6 +3,8 @@ package com.danny.db;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class DataFile {
@@ -10,6 +12,8 @@ public class DataFile {
     public static final String MergeFileName = "danny.data.merge";
 
     private RandomAccessFile file;
+
+    private FileChannel channel;
     private String absolutePath;
     private AtomicLong offset;
 
@@ -17,10 +21,7 @@ public class DataFile {
         this.file = file;
         this.absolutePath = absolutePath;
         this.offset = new AtomicLong(offset);
-    }
-
-    public DataFile(String filePath) {
-
+        this.channel = file.getChannel();
     }
 
     public long getOffset() {
@@ -89,13 +90,14 @@ public class DataFile {
     }
 
     public void write(Entry entry) throws IOException {
-        byte[] encode = entry.encode();
-        file.seek(offset.get());
-        file.write(encode);
+        ByteBuffer encode = entry.encode();
+        channel.position(offset.get());
+        channel.write(encode);
         offset.getAndAdd(entry.getSize());
     }
 
     public void close() throws IOException {
+        channel.force(true);
         file.close();
     }
 }
