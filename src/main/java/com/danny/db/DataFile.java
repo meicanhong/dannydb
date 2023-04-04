@@ -3,6 +3,7 @@ package com.danny.db;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class DataFile {
     public static final String FileName = "danny.data";
@@ -10,16 +11,20 @@ public class DataFile {
 
     private RandomAccessFile file;
     private String absolutePath;
-    private long offset;
+    private AtomicLong offset;
 
     private DataFile(RandomAccessFile file, String absolutePath, long offset) {
         this.file = file;
         this.absolutePath = absolutePath;
-        this.offset = offset;
+        this.offset = new AtomicLong(offset);
+    }
+
+    public DataFile(String filePath) {
+
     }
 
     public long getOffset() {
-        return this.offset;
+        return this.offset.get();
     }
 
     public String getAbsolutePath() {
@@ -85,9 +90,9 @@ public class DataFile {
 
     public void write(Entry entry) throws IOException {
         byte[] encode = entry.encode();
-        file.seek(offset);
+        file.seek(offset.get());
         file.write(encode);
-        offset += entry.getSize();
+        offset.getAndAdd(entry.getSize());
     }
 
     public void close() throws IOException {
