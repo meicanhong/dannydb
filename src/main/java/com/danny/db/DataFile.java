@@ -6,16 +6,18 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DataFile {
     public static final String FileName = "danny.data";
     public static final String MergeFileName = "danny.data.merge";
 
     private RandomAccessFile file;
-
     private FileChannel channel;
     private String absolutePath;
     private AtomicLong offset;
+
+    private ReentrantLock lock = new ReentrantLock();
 
     private DataFile(RandomAccessFile file, String absolutePath, long offset) {
         this.file = file;
@@ -89,11 +91,14 @@ public class DataFile {
         return entry;
     }
 
-    public void write(Entry entry) throws IOException {
+    public long write(Entry entry) throws IOException {
         ByteBuffer encode = entry.encode();
+        lock.lock();
         channel.position(offset.get());
         channel.write(encode);
-        offset.getAndAdd(entry.getSize());
+        long offset = this.offset.getAndAdd(entry.getSize());
+        lock.unlock();
+        return offset;
     }
 
     public void close() throws IOException {

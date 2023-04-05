@@ -67,17 +67,14 @@ public class Action {
     }
 
     public void put(byte[] key, byte[] value) throws IOException {
-        // 先获取 offset，未写入前的 offset 才是 entry 的开始位置
-        long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.PUT);
-        dataFile.write(entry);
+        long offset = dataFile.write(entry);
         indexes.put(new ByteArrayWrapper(key), offset);
     }
 
     public void delete(byte[] key, byte[] value) throws IOException {
-        long offset = dataFile.getOffset();
         Entry entry = new Entry(key, value, Entry.DEL);
-        dataFile.write(entry);
+        long offset = dataFile.write(entry);
         indexes.put(new ByteArrayWrapper(key), offset);
     }
 
@@ -95,7 +92,7 @@ public class Action {
         List<Entry> validEntries = new ArrayList<Entry>();
         while ((entry = dataFile.read(offset)) != null) {
             Long memoryOffset = indexes.get(new ByteArrayWrapper(entry.getKey()));
-            if (memoryOffset != null && memoryOffset == offset) {
+            if (memoryOffset != null && memoryOffset == offset && entry.getMark() != Entry.DEL) {
                 validEntries.add(entry);
             }
             offset += entry.getSize();
