@@ -11,8 +11,6 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BackendTest {
@@ -48,6 +46,8 @@ class BackendTest {
 
     @Test
     void merge() throws Exception {
+        putAndGet();
+        delete();
         backend.merge();
     }
 
@@ -55,26 +55,27 @@ class BackendTest {
     void pressureTest() throws NoSuchAlgorithmException, IOException, InterruptedException {
         String key = "";
         String value = "";
+        int size = 1000000;
         List<byte[][]> datas = new ArrayList<>();
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < size; i++) {
             key = RandomHashGenerator.getRandomHash();
             value = RandomHashGenerator.getRandomHash();
             byte[][] data = {key.getBytes(), value.getBytes()};
             datas.add(data);
         }
         long startTime = System.currentTimeMillis();
-        backend.put(datas);
+        backend.putBatch(datas);
         long endTime = System.currentTimeMillis();
         long timeElapsed = endTime - startTime;
-        System.out.println("Insert 1 Million Records Time elapsed: " + timeElapsed + " ms");
+        System.out.println("Insert "+ size +" Records Time elapsed: " + timeElapsed + " ms");
 
         startTime = System.currentTimeMillis();
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < datas.size(); i++) {
             byte[] result = backend.get(datas.get(i)[0]);
             Assertions.assertEquals(new String(datas.get(i)[1]), new String(result));
         }
         endTime = System.currentTimeMillis();
         timeElapsed = endTime - startTime;
-        System.out.println("Get 500000 Records Time elapsed: " + timeElapsed + " ms");
+        System.out.println("Got "+ size + " Records Time elapsed: " + timeElapsed + " ms");
     }
 }

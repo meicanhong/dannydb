@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 public class Backend {
     private static int coreNumber = Runtime.getRuntime().availableProcessors();
-    private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(coreNumber * 2, coreNumber * 2, 360, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(coreNumber, coreNumber * 2, 360, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     private Action action;
 
     public Backend(String dirPath) throws IOException {
@@ -17,7 +17,7 @@ public class Backend {
         return action.get(key);
     }
 
-    public void put(List<byte[][]> datas) throws InterruptedException {
+    public void putBatch(List<byte[][]> datas) throws InterruptedException {
         if (datas == null) return;
         CountDownLatch countDownLatch = new CountDownLatch(datas.size());
         for (byte[][] data : datas) {
@@ -41,7 +41,7 @@ public class Backend {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }).get();
     }
     public void delete(byte[] key, byte[] value) throws ExecutionException, InterruptedException {
         threadPoolExecutor.submit(() -> {

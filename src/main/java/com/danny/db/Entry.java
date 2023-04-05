@@ -28,14 +28,15 @@ public class Entry implements Serializable {
         this.mark = mark;
     }
 
-    public byte[] encode() {
+    public ByteBuffer encode() {
         ByteBuffer buffer = ByteBuffer.allocate(getSize()).order(ByteOrder.BIG_ENDIAN);
         buffer.putInt(keySize);
         buffer.putInt(valueSize);
         buffer.putShort(mark);
         buffer.put(key);
         buffer.put(value);
-        return buffer.array();
+        buffer.position(0);
+        return buffer;
     }
 
     public static Entry decode(byte[] buffer) {

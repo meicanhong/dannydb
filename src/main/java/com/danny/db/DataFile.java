@@ -3,23 +3,31 @@ package com.danny.db;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DataFile {
     public static final String FileName = "danny.data";
     public static final String MergeFileName = "danny.data.merge";
 
     private RandomAccessFile file;
+    private FileChannel channel;
     private String absolutePath;
-    private long offset;
+    private AtomicLong offset;
+
+    private ReentrantLock lock = new ReentrantLock();
 
     private DataFile(RandomAccessFile file, String absolutePath, long offset) {
         this.file = file;
         this.absolutePath = absolutePath;
-        this.offset = offset;
+        this.offset = new AtomicLong(offset);
+        this.channel = file.getChannel();
     }
 
     public long getOffset() {
-        return this.offset;
+        return this.offset.get();
     }
 
     public String getAbsolutePath() {
@@ -83,14 +91,18 @@ public class DataFile {
         return entry;
     }
 
-    public void write(Entry entry) throws IOException {
-        byte[] encode = entry.encode();
-        file.seek(offset);
-        file.write(encode);
-        offset += entry.getSize();
+    public long write(Entry entry) throws IOException {
+        ByteBuffer encode = entry.encode();
+        lock.lock();
+        channel.position(offset.get());
+        channel.write(encode);
+        long offset = this.offset.getAndAdd(entry.getSize());
+        lock.unlock();
+        return offset;
     }
 
     public void close() throws IOException {
+        channel.force(true);
         file.close();
     }
 }
