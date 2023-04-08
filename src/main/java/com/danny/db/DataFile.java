@@ -1,5 +1,7 @@
 package com.danny.db;
 
+import com.danny.db.util.CompressionUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -79,14 +81,16 @@ public class DataFile {
             ByteBuffer keyBuffer = ByteBuffer.allocate(entry.getKeySize());
             channel.read(keyBuffer);
             keyBuffer.flip();
-            entry.setKey(keyBuffer.array());
+            byte[] key = CompressionUtil.decompress(keyBuffer.array());
+            entry.setKey(key);
         }
 
         if (entry.getValueSize() > 0) {
             ByteBuffer valueBuffer = ByteBuffer.allocate(entry.getValueSize());
             channel.read(valueBuffer);
             valueBuffer.flip();
-            entry.setValue(valueBuffer.array());
+            byte[] value = CompressionUtil.decompress(valueBuffer.array());
+            entry.setValue(value);
         }
         return entry;
     }
@@ -96,7 +100,7 @@ public class DataFile {
         lock.lock();
         channel.position(offset.get());
         channel.write(encode);
-        long offset = this.offset.getAndAdd(entry.getSize());
+        long offset = this.offset.getAndAdd(entry.getDiskSize());
         lock.unlock();
         return offset;
     }

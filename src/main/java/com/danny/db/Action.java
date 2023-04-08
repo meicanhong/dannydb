@@ -44,7 +44,7 @@ public class Action {
                 if (entry.getMark() != Entry.DEL) {
                     indexes.put(new ByteArrayWrapper(entry.getKey()), offset);
                 }
-                offset += entry.getSize();
+                offset += entry.getDiskSize();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -95,7 +95,7 @@ public class Action {
             if (memoryOffset != null && memoryOffset == offset && entry.getMark() != Entry.DEL) {
                 validEntries.add(entry);
             }
-            offset += entry.getSize();
+            offset += entry.getDiskSize();
         }
 
         if (validEntries.size() == 0) return;

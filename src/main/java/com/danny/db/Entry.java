@@ -1,5 +1,7 @@
 package com.danny.db;
 
+import com.danny.db.util.CompressionUtil;
+
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -10,6 +12,8 @@ public class Entry implements Serializable {
     public static final short DEL = 1;
     private byte[] key;
     private byte[] value;
+
+    private int diskSize;
     private int keySize;
     private int valueSize;
     private short mark;
@@ -20,21 +24,25 @@ public class Entry implements Serializable {
         this.keySize = key.length;
         this.valueSize = value.length;
         this.mark = mark;
+        this.diskSize = CompressionUtil.compress(key).length + CompressionUtil.compress(value).length + ENTRY_HEADER_SIZE;
     }
 
     private Entry(int keySize, int valueSize, short mark) {
         this.keySize = keySize;
         this.valueSize = valueSize;
+        this.diskSize = keySize + valueSize + ENTRY_HEADER_SIZE;
         this.mark = mark;
     }
 
     public ByteBuffer encode() {
-        ByteBuffer buffer = ByteBuffer.allocate(getSize()).order(ByteOrder.BIG_ENDIAN);
-        buffer.putInt(keySize);
-        buffer.putInt(valueSize);
+        ByteBuffer buffer = ByteBuffer.allocate(getDiskSize()).order(ByteOrder.BIG_ENDIAN);
+        byte[] compress_key = CompressionUtil.compress(this.key);
+        byte[] compress_value = CompressionUtil.compress(this.value);
+        buffer.putInt(compress_key.length);
+        buffer.putInt(compress_value.length);
         buffer.putShort(mark);
-        buffer.put(key);
-        buffer.put(value);
+        buffer.put(compress_key);
+        buffer.put(compress_value);
         buffer.position(0);
         return buffer;
     }
@@ -75,7 +83,7 @@ public class Entry implements Serializable {
         return this.valueSize;
     }
 
-    public int getSize() {
-        return keySize + valueSize + ENTRY_HEADER_SIZE;
+    public int getDiskSize() {
+        return diskSize;
     }
 }
