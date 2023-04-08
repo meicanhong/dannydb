@@ -66,28 +66,28 @@ public class DataFile {
      * @throws IOException
      */
     public Entry read(long offset) throws IOException {
-        if (file.length() < offset + Entry.ENTRY_HEADER_SIZE) return null;
-        byte[] bytes = new byte[Entry.ENTRY_HEADER_SIZE];
-        file.seek(offset);
-        file.readFully(bytes);
-        Entry entry = Entry.decode(bytes);
+        if (channel.size() <= offset) {
+            return null;
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(Entry.ENTRY_HEADER_SIZE);
+        channel.position(offset);
+        channel.read(buffer);
+        buffer.flip();
+        Entry entry = Entry.decode(buffer.array());
 
-        offset += Entry.ENTRY_HEADER_SIZE;
         if (entry.getKeySize() > 0) {
-            byte[] key = new byte[entry.getKeySize()];
-            file.seek(offset);
-            file.readFully(key);
-            entry.setKey(key);
+            ByteBuffer keyBuffer = ByteBuffer.allocate(entry.getKeySize());
+            channel.read(keyBuffer);
+            keyBuffer.flip();
+            entry.setKey(keyBuffer.array());
         }
 
-        offset += entry.getKeySize();
         if (entry.getValueSize() > 0) {
-            byte[] value = new byte[entry.getValueSize()];
-            file.seek(offset);
-            file.readFully(value);
-            entry.setValue(value);
+            ByteBuffer valueBuffer = ByteBuffer.allocate(entry.getValueSize());
+            channel.read(valueBuffer);
+            valueBuffer.flip();
+            entry.setValue(valueBuffer.array());
         }
-
         return entry;
     }
 
