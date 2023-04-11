@@ -43,7 +43,7 @@ public class Entry implements Serializable {
         buffer.putShort(mark);
         buffer.put(compress_key);
         buffer.put(compress_value);
-        buffer.position(0);
+        buffer.flip();
         return buffer;
     }
 
