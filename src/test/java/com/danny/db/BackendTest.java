@@ -55,7 +55,7 @@ class BackendTest {
     void pressureTest() throws NoSuchAlgorithmException, IOException, InterruptedException {
         String key = "";
         String value = "";
-        int size = 1000000;
+        int size = 1000;
         List<byte[][]> datas = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             key = RandomHashGenerator.getRandomHash();

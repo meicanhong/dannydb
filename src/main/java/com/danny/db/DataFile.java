@@ -3,6 +3,7 @@ package com.danny.db;
 import com.danny.db.util.CompressionUtil;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -18,14 +19,20 @@ public class DataFile {
     private FileChannel channel;
     private String absolutePath;
     private AtomicLong offset;
-
-    private ReentrantLock lock = new ReentrantLock();
+    private ThreadLocal<FileChannel> channels;
 
     private DataFile(RandomAccessFile file, String absolutePath, long offset) {
         this.file = file;
         this.absolutePath = absolutePath;
         this.offset = new AtomicLong(offset);
         this.channel = file.getChannel();
+        this.channels = ThreadLocal.withInitial(() -> {
+            try {
+                return new RandomAccessFile(FileName, "rw").getChannel();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public long getOffset() {
@@ -95,18 +102,22 @@ public class DataFile {
         return entry;
     }
 
-    public long write(Entry entry) throws IOException {
+    public long write(final Entry entry) throws IOException {
         ByteBuffer encode = entry.encode();
-        lock.lock();
-        channel.position(offset.get());
-        channel.write(encode);
-        long offset = this.offset.getAndAdd(entry.getDiskSize());
-        lock.unlock();
-        return offset;
+        long currentOffset = offset.getAndAdd(entry.getDiskSize());
+        FileChannel fileChannel = channels.get();
+        fileChannel.position(currentOffset);
+        fileChannel.write(encode);
+        fileChannel.force(true);
+        fileChannel.close();
+        channels.remove();
+        return currentOffset;
     }
 
     public void close() throws IOException {
-        channel.force(true);
-        file.close();
+
+        FileChannel fileChannel = channels.get();
+        fileChannel.close();
+        channels.remove();
     }
 }
