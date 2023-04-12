@@ -14,7 +14,6 @@ public class Action {
     private ConcurrentHashMap<ByteArrayWrapper, Long> indexes;
     private DataFile dataFile;
     private String dirPath;
-    private ReadWriteLock lock;
 
     public Action(String dirPath) throws IOException {
         Objects.requireNonNull(dirPath, "dirPath cannot be null");
@@ -26,7 +25,6 @@ public class Action {
         this.dataFile = DataFile.createDataFile(dirPath);
         this.indexes = new ConcurrentHashMap<>();
         this.dirPath = dirPath;
-        this.lock = new ReentrantReadWriteLock();
 
         loadIndexesFromFile();
     }

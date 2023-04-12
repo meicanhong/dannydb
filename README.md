@@ -1,26 +1,11 @@
 # DannyDB
-Danny 学习实现 kv 存储引擎的项目
+DannyDB 是一个 Key-Value 存储引擎，采用类似 bitcask 的日志结构设计。
 
-## Bitcask
+## 特性:
+- 支持多线程并发读写
+- 支持对数据进行 Zstd 压缩
+- 支持回收过期数据
 
-### 2023-03-30 
-
-实现第一版本 Bitcask， 完成了读取、写入、删除、Compaction 和数据持久化等操作。
-但还是有很多功能未实现，比如：
-- 并发读写
-- 数据压缩
-- 数据文件拆分
-- 自动 Compaction
-
-性能测试:
-- 测试写入 500w 条数据，总共写入 690MB 数据，耗时 17022 ms，平均每秒写入 29.4w 条数据
-- 从 500w 条数据中随机读取 100w 条数据，总共读取 140MB 数据，耗时 3832 ms，平均每秒读取 26.1w 条数据
-
-学习资料:
-- https://www.cnblogs.com/meicanhong/p/17234415.html
-
-## Sorted Strings Table
-need to do
-
-学习资料:
-- https://soulmachine.gitbooks.io/system-design/content/cn/key-value-store.html
+## 性能测试:
+- 测试写入 100w 条数据，总共写入 128MB 数据，耗时 4856 ms，平均每秒写入 20.5w 条数据
+- 测试读取 100w 条数据，总共读取 128MB 数据，耗时 229 ms，平均每秒读取 435w 条数据

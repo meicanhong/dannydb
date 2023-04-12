@@ -12,10 +12,18 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BackendTest {
     private Backend backend;
+
+    private static int coreNumber = Runtime.getRuntime().availableProcessors();
+    private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(coreNumber, coreNumber * 2, 360, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+
     @BeforeAll
     void init() throws Exception {
         String path = System.getProperty("user.dir");
@@ -64,6 +72,10 @@ class BackendTest {
             byte[][] data = {key.getBytes(), value.getBytes()};
             datas.add(data);
         }
+        AtomicLong dataByteSize = new AtomicLong();
+        datas.stream().forEach(data -> dataByteSize.addAndGet(data[0].length + data[1].length));
+        System.out.println("Data Size: " + dataByteSize.get() / 1024 / 1024 + " MB");
+
         long startTime = System.currentTimeMillis();
         backend.putBatch(datas);
         long endTime = System.currentTimeMillis();
@@ -72,8 +84,15 @@ class BackendTest {
 
         startTime = System.currentTimeMillis();
         for (int i = 0; i < datas.size(); i++) {
-            byte[] result = backend.get(datas.get(i)[0]);
-            Assertions.assertEquals(new String(datas.get(i)[1]), new String(result));
+            int finalI = i;
+            threadPoolExecutor.submit(() -> {
+                try {
+                    byte[] result = backend.get(datas.get(finalI)[0]);
+                    Assertions.assertEquals(new String(datas.get(finalI)[1]), new String(result));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
         endTime = System.currentTimeMillis();
         timeElapsed = endTime - startTime;
