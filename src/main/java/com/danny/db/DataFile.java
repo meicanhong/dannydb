@@ -16,19 +16,18 @@ public class DataFile {
     public static final String MergeFileName = "danny.data.merge";
 
     private RandomAccessFile file;
-    private FileChannel channel;
     private String absolutePath;
     private AtomicLong offset;
     private ThreadLocal<FileChannel> channels;
 
-    private DataFile(RandomAccessFile file, String absolutePath, long offset) {
-        this.file = file;
+    private DataFile(String absolutePath) throws IOException {
+        this.file = new RandomAccessFile(absolutePath, "rw");
+        long offset = this.file.length();
         this.absolutePath = absolutePath;
         this.offset = new AtomicLong(offset);
-        this.channel = file.getChannel();
         this.channels = ThreadLocal.withInitial(() -> {
             try {
-                return new RandomAccessFile(FileName, "rw").getChannel();
+                return new RandomAccessFile(absolutePath, "rw").getChannel();
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -60,9 +59,7 @@ public class DataFile {
     }
 
     private static DataFile createFile(String fileName) throws IOException {
-        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-        long offset = file.length();
-        return new DataFile(file, fileName, offset);
+        return new DataFile(fileName);
     }
 
     /**
@@ -75,6 +72,7 @@ public class DataFile {
      * @throws IOException
      */
     public Entry read(long offset) throws IOException {
+        FileChannel channel = channels.get();
         if (channel.size() <= offset) {
             return null;
         }
@@ -108,14 +106,10 @@ public class DataFile {
         FileChannel fileChannel = channels.get();
         fileChannel.position(currentOffset);
         fileChannel.write(encode);
-        fileChannel.force(true);
-        fileChannel.close();
-        channels.remove();
         return currentOffset;
     }
 
     public void close() throws IOException {
-
         FileChannel fileChannel = channels.get();
         fileChannel.close();
         channels.remove();
