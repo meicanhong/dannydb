@@ -1,4 +1,4 @@
-package com.danny.db;
+package com.danny.db.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

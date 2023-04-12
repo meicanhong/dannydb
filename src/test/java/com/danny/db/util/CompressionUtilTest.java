@@ -1,6 +1,5 @@
 package com.danny.db.util;
 
-import com.danny.db.RandomHashGenerator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
