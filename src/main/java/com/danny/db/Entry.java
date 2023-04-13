@@ -36,13 +36,13 @@ public class Entry implements Serializable {
 
     public ByteBuffer encode() {
         ByteBuffer buffer = ByteBuffer.allocate(getDiskSize()).order(ByteOrder.BIG_ENDIAN);
-        byte[] compress_key = CompressionUtil.compress(this.key);
-        byte[] compress_value = CompressionUtil.compress(this.value);
-        buffer.putInt(compress_key.length);
-        buffer.putInt(compress_value.length);
+        byte[] compressKey = CompressionUtil.compress(this.key);
+        byte[] compressValue = CompressionUtil.compress(this.value);
+        buffer.putInt(compressKey.length);
+        buffer.putInt(compressValue.length);
         buffer.putShort(mark);
-        buffer.put(compress_key);
-        buffer.put(compress_value);
+        buffer.put(compressKey);
+        buffer.put(compressValue);
         buffer.flip();
         return buffer;
     }

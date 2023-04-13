@@ -61,7 +61,7 @@ class BackendTest {
     }
 
     @Test
-    void pressureTest() throws NoSuchAlgorithmException, IOException, InterruptedException {
+    void pressureTest() throws NoSuchAlgorithmException {
         String key = "";
         String value = "";
         int size = 1000000;
@@ -73,7 +73,7 @@ class BackendTest {
             datas.add(data);
         }
         AtomicLong dataByteSize = new AtomicLong();
-        datas.stream().forEach(data -> dataByteSize.addAndGet(data[0].length + data[1].length));
+        datas.stream().forEach(data -> dataByteSize.addAndGet(data[0].length + data[1].length + Entry.ENTRY_HEADER_SIZE));
         System.out.println("Data Size: " + dataByteSize.get() / 1024 / 1024 + " MB");
 
         long startTime = System.currentTimeMillis();

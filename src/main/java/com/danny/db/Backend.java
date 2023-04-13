@@ -17,21 +17,17 @@ public class Backend {
         return action.get(key);
     }
 
-    public void putBatch(List<byte[][]> datas) throws InterruptedException {
+    public void putBatch(List<byte[][]> datas) {
         if (datas == null) return;
-        CountDownLatch countDownLatch = new CountDownLatch(datas.size());
         for (byte[][] data : datas) {
             threadPoolExecutor.submit(() -> {
                 try {
                     action.put(data[0], data[1]);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
-                } finally {
-                    countDownLatch.countDown();
                 }
             });
         }
-        countDownLatch.await();
     }
 
     public void put(byte[] key, byte[] value) throws ExecutionException, InterruptedException {

@@ -55,6 +55,9 @@ public class Action {
             return null;
         }
         Entry entry = dataFile.read(offset);
+        if (entry == null) {
+            throw new RuntimeException("entry is null for offset: " + offset);
+        }
         if (entry.getMark() == Entry.DEL) {
             return null;
         }
